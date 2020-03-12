@@ -48,3 +48,6 @@ const interp = match<number>({
 })
 
 console.log(interp(new IdC(123)));
+
+export { NumC, IdC };
+export default interp;

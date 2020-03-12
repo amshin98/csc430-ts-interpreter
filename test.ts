@@ -1,6 +1,8 @@
-describe('calculate', function() {
-   it('add', function() {
-      let result = 2 + 5;
-      expect(result).toBe(7);
+import interp, { NumC } from './index';
+
+describe('1-depth exprC tests', function() {
+   it('NumC', function() {
+      const result: number = interp(new NumC(123));
+      expect(result).toBe(123);
    });
 });
