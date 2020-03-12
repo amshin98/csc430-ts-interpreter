@@ -32,6 +32,29 @@ interface HashTable<T> {
   [key : string] : T;
 }
 
+// Values
+class NumV {
+    type = "NumV" as const
+    constructor(public n: number) {}
+}
+class StrV {
+    type = "StrV" as const
+    constructor(public str: string) {}
+}
+class BoolV {
+    type = "BoolV" as const
+    constructor(public bool: boolean) {}
+}
+class CloV {
+    type = "CloV" as const
+    constructor(public params: string[], public body: ExprC, public env: Map) {}
+}
+class PrimV {
+    type = "PrimV" as const
+    constructor(public op: Value, public left: Value, public right: Value) {}
+}
+type Value = NumV | StrV | BoolV | CloV | PrimV
+
 function init_mt_env() {
   var env: HashTable<number> = {}
   env["false"] = 1;
