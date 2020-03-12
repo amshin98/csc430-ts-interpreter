@@ -27,6 +27,50 @@ class IdC {
 //     constructor(public params: symbol[], public body: ExprC) {}
 // }
 
+// Environment
+interface HashTable<T> {
+  [key : string] : T;
+}
+
+// Values
+class NumV {
+    type = "NumV" as const
+    constructor(public n: number) {}
+}
+class StrV {
+    type = "StrV" as const
+    constructor(public str: string) {}
+}
+class BoolV {
+    type = "BoolV" as const
+    constructor(public bool: boolean) {}
+}
+class CloV {
+    type = "CloV" as const
+    constructor(public params: string[], public body: ExprC, public env: Map) {}
+}
+class PrimV {
+    type = "PrimV" as const
+    constructor(public op: any) {}
+}
+type Value = NumV | StrV | BoolV | CloV | PrimV
+
+// Environment
+function init_mt_env() {
+  var env = new Map();
+  env.set("+", new PrimV(my_add));
+  return env;
+}
+
+function my_add(left : Value, right : Value) {
+  return (<NumV> left).n + (<NumV> right).n;
+}
+
+// extends the environment
+function extend_env(new_env : Map<String, Value>, old_env : Map<String, Value>) {
+  return new Map([...old_env, ...new_env]);
+}
+
 type ExprC = NumC | IdC//| StrC | BoolC | IdC | IfC | AppC | LamC
 type ExprCType = ExprC["type"]
 
