@@ -58,31 +58,29 @@ type ExprCTypeMap = ExprCMap<ExprC>;
 
 type Pattern<T> = { [K in keyof ExprCTypeMap]: (expr: ExprCTypeMap[K]) => T };
 
-function interp(env: Map<string, Value>): (expr: ExprC) => Value {
+function interp(expr: ExprC, env: Map<string, Value>): Value {
    const match: Pattern<Value> = {
       NumC: ({ n }) => new NumV(n),
       IdC: ({ s }) => <Value>env.get(s),
       LamC: ({ params, body }) => new CloV(params, body, env),
       IfC: ({ cond, then, els }) => {
-         const interpWithEnv = interp(env);
-         const condValue = interpWithEnv(cond) as BoolV;
+         const condValue = interp(cond, env) as BoolV;
 
-         return condValue.bool ? interpWithEnv(then) : interpWithEnv(els);
+         return condValue.bool ? interp(then, env) : interp(els, env);
       },
       AppC: ({ func, args }) => {
-         const interpWithEnv = interp(env);
-         const fd: Value = interpWithEnv(func);
+         const fd: Value = interp(func, env);
          if (fd instanceof CloV) {
             const newEnv = new Map();
             fd.params.forEach((param: string, index: number) => {
                const arg: ExprC = args[index];
-               newEnv.set(param, interpWithEnv(arg));
+               newEnv.set(param, interp(arg, env));
             });
 
-            return interp(extendEnv(newEnv, fd.env))(fd.body);
+            return interp(fd.body, extendEnv(newEnv, fd.env));
          } else if (fd instanceof PrimV) {
-            const leftOp = interpWithEnv(args[0]);
-            const rightOp = interpWithEnv(args[1]);
+            const leftOp = interp(args[0], env);
+            const rightOp = interp(args[1], env);
 
             return fd.op(leftOp, rightOp);
          } else {
@@ -91,7 +89,7 @@ function interp(env: Map<string, Value>): (expr: ExprC) => Value {
       },
    };
 
-   return expr => match[expr.type](expr as any);
+   return match[expr.type](expr as any);
 }
 
 // Environment
@@ -116,7 +114,7 @@ function extendEnv(newEnv: Map<string, Value>, oldEnv: Map<string, Value>) {
    return new Map([...oldEnv, ...newEnv]);
 }
 
-const topInterp = interp(getBaseEnv());
+const topInterp = (expr: ExprC) => interp(expr, getBaseEnv());
 
 export { NumC, IdC, AppC, LamC, IfC, Value, NumV, StrV, BoolV };
 export default topInterp;
