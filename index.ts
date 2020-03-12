@@ -66,6 +66,10 @@ function my_add(left : Value, right : Value) {
   return (<NumV> left).n + (<NumV> right).n;
 }
 
+// extends the environment
+function extend_env(new_env : Map<String, Value>, old_env : Map<String, Value>) {
+  return new Map([...old_env, ...new_env]);
+}
 
 type ExprC = NumC | IdC//| StrC | BoolC | IdC | IfC | AppC | LamC
 type ExprCType = ExprC["type"]
