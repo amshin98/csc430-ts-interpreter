@@ -89,12 +89,12 @@ type ExprCTypeMap = ExprCMap<ExprC>;
 type Pattern<T> = { [K in keyof ExprCTypeMap]: (expr: ExprCTypeMap[K]) => T };
 
 function interp(env: Map<string, Value>): (expr: ExprC) => Value {
-   const pattern: Pattern<Value> = {
+   const match: Pattern<Value> = {
       NumC: ({ n }) => new NumV(n),
       IdC: ({ s }) => <Value>env.get(s),
    };
 
-   return expr => pattern[expr.type](expr as any);
+   return expr => match[expr.type](expr as any);
 }
 
 const topInterp = interp(init_mt_env());
