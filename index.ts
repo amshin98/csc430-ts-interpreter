@@ -47,7 +47,7 @@ class BoolV {
 }
 class CloV {
     type = "CloV" as const
-    constructor(public params: string[], public body: ExprC, public env: Map) {}
+    constructor(public params: string[], public body: ExprC, public env: Map<string, Value>) {}
 }
 class PrimV {
     type = "PrimV" as const
@@ -67,7 +67,7 @@ function my_add(left : Value, right : Value) {
 }
 
 // extends the environment
-function extend_env(new_env : Map<String, Value>, old_env : Map<String, Value>) {
+function extend_env(new_env : Map<string, Value>, old_env : Map<string, Value>) {
   return new Map([...old_env, ...new_env]);
 }
 
@@ -79,7 +79,7 @@ type ExprCTypeMap = ExprCMap<ExprC>
 
 type Pattern<T> = { [K in keyof ExprCTypeMap]: (expr: ExprCTypeMap[K]) => T }
 
-function match<T>(pattern: Pattern<T>): (expr: ExprC) => T {
+function match<T>(pattern: Pattern<T>, env: Map<string, Value>): (expr: ExprC) => T {
   // https://github.com/Microsoft/TypeScript/issues/14107
   return expr => pattern[expr.type](expr as any)
 }
@@ -89,6 +89,6 @@ const exprs = [new NumC(3), new NumC(5)]
 const interp = match<number>({
   NumC: ({n}) => n,
   IdC: ({s}) => s,
-})
+}, init_mt_env())
 
 console.log(interp(new IdC(123)));
