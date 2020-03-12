@@ -1,4 +1,14 @@
-import topInterp, { AppC, IdC, NumC, LamC, Value, NumV, StrV } from './index';
+import topInterp, {
+   NumC,
+   AppC,
+   IdC,
+   LamC,
+   IfC,
+   Value,
+   NumV,
+   StrV,
+   BoolV,
+} from './index';
 
 describe('1-depth exprC tests', function() {
    it('NumC', function() {
@@ -8,6 +18,16 @@ describe('1-depth exprC tests', function() {
    it('IdC', function() {
       const result: Value = topInterp(new IdC('null'));
       expect(result).toEqual(new StrV('null'));
+   });
+   it('IfC', function() {
+      const result: Value = topInterp(
+         new IfC(
+            new AppC(new IdC('<='), [new NumC(50), new NumC(5)]),
+            new NumC(1),
+            new NumC(0),
+         ),
+      );
+      expect(result).toEqual(new NumV(0));
    });
 });
 

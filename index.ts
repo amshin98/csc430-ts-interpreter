@@ -6,10 +6,10 @@ class IdC {
    type = 'IdC' as const;
    constructor(public s: string) {}
 }
-// class IfC {
-//     type = "IfC" as const
-//     constructor(public tst: ExprC, public thn: ExprC, public els: ExprC) {}
-// }
+class IfC {
+   type = 'IfC' as const;
+   constructor(public cond: ExprC, public then: ExprC, public els: ExprC) {}
+}
 class AppC {
    type = 'AppC' as const;
    constructor(public func: ExprC, public args: ExprC[]) {}
@@ -18,12 +18,7 @@ class LamC {
    type = 'LamC' as const;
    constructor(public params: string[], public body: ExprC) {}
 }
-type ExprC = NumC | IdC | AppC | LamC; //| IfC
-
-// Environment
-interface HashTable<T> {
-   [key: string]: T;
-}
+type ExprC = NumC | IdC | AppC | LamC | IfC;
 
 // Values
 class NumV {
@@ -52,23 +47,6 @@ class PrimV {
 }
 type Value = NumV | StrV | BoolV | CloV | PrimV;
 
-// Environment
-function init_mt_env(): Map<string, Value> {
-   var env = new Map<string, Value>();
-   env.set('null', new StrV('null'));
-   env.set('+', new PrimV(plus));
-   return env;
-}
-
-function plus(left: Value, right: Value): Value {
-   return new NumV((<NumV>left).n + (<NumV>right).n);
-}
-
-// extends the environment
-function extend_env(new_env: Map<string, Value>, old_env: Map<string, Value>) {
-   return new Map([...old_env, ...new_env]);
-}
-
 /*
  * Visitor TypeScript implementation of Racket's pattern matching
  * inspired by https://gist.github.com/pufface/6a2050b21a692d2400c35bbe3536552c
@@ -84,32 +62,61 @@ function interp(env: Map<string, Value>): (expr: ExprC) => Value {
    const match: Pattern<Value> = {
       NumC: ({ n }) => new NumV(n),
       IdC: ({ s }) => <Value>env.get(s),
+      LamC: ({ params, body }) => new CloV(params, body, env),
+      IfC: ({ cond, then, els }) => {
+         const interpWithEnv = interp(env);
+         const condValue = interpWithEnv(cond) as BoolV;
+
+         return condValue.bool ? interpWithEnv(then) : interpWithEnv(els);
+      },
       AppC: ({ func, args }) => {
          const interpWithEnv = interp(env);
-         const funcDefinition: Value = interpWithEnv(func);
-         if (funcDefinition instanceof CloV) {
+         const fd: Value = interpWithEnv(func);
+         if (fd instanceof CloV) {
             const newEnv = new Map();
-            funcDefinition.params.forEach((param, index) =>
-               newEnv.set(param, interpWithEnv(args[index])),
-            );
-            return interp(extend_env(newEnv, funcDefinition.env))(
-               funcDefinition.body,
-            );
-         } else if (funcDefinition instanceof PrimV) {
+            fd.params.forEach((param: string, index: number) => {
+               const arg: ExprC = args[index];
+               newEnv.set(param, interpWithEnv(arg));
+            });
+
+            return interp(extendEnv(newEnv, fd.env))(fd.body);
+         } else if (fd instanceof PrimV) {
             const leftOp = interpWithEnv(args[0]);
             const rightOp = interpWithEnv(args[1]);
-            return funcDefinition.op(leftOp, rightOp);
+
+            return fd.op(leftOp, rightOp);
          } else {
             throw new Error('DUNQ: AppC was not a CloV or a PrimV');
          }
       },
-      LamC: ({ params, body }) => new CloV(params, body, env),
    };
 
    return expr => match[expr.type](expr as any);
 }
 
-const topInterp = interp(init_mt_env());
+// Environment
+function getBaseEnv(): Map<string, Value> {
+   var env = new Map<string, Value>();
+   env.set('null', new StrV('null'));
+   env.set('+', new PrimV(plus));
+   env.set('<=', new PrimV(lessThan));
+   return env;
+}
 
-export { NumC, IdC, AppC, LamC, Value, NumV, StrV };
+function plus(left: Value, right: Value): Value {
+   return new NumV((<NumV>left).n + (<NumV>right).n);
+}
+
+function lessThan(left: Value, right: Value): Value {
+   return new BoolV((<NumV>left).n <= (<NumV>right).n);
+}
+
+// extends the environment
+function extendEnv(newEnv: Map<string, Value>, oldEnv: Map<string, Value>) {
+   return new Map([...oldEnv, ...newEnv]);
+}
+
+const topInterp = interp(getBaseEnv());
+
+export { NumC, IdC, AppC, LamC, IfC, Value, NumV, StrV, BoolV };
 export default topInterp;
