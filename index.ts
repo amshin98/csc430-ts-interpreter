@@ -92,3 +92,6 @@ const interp = match<number>({
 }, init_mt_env())
 
 console.log(interp(new IdC(123)));
+
+export { NumC, IdC };
+export default interp;
