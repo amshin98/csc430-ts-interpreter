@@ -2,14 +2,6 @@ class NumC {
    type = 'NumC' as const;
    constructor(public n: number) {}
 }
-// class StrC {
-//     type = "StrC" as const
-//     constructor(public str: string) {}
-// }
-// class BoolC {
-//     type = "BoolC" as const
-//     constructor(public bool: Boolean) {}
-// }
 class IdC {
    type = 'IdC' as const;
    constructor(public s: string) {}
@@ -18,15 +10,15 @@ class IdC {
 //     type = "IfC" as const
 //     constructor(public tst: ExprC, public thn: ExprC, public els: ExprC) {}
 // }
-// class AppC {
-//    type = 'AppC' as const;
-//    constructor(public func: ExprC, public arg: ExprC[]) {}
-// }
-// class LamC {
-//     type = "LamC" as const
-//     constructor(public params: symbol[], public body: ExprC) {}
-// }
-type ExprC = NumC | IdC //| AppC; //| StrC | BoolC | IfC | LamC
+class AppC {
+   type = 'AppC' as const;
+   constructor(public func: ExprC, public args: ExprC[]) {}
+}
+class LamC {
+   type = 'LamC' as const;
+   constructor(public params: string[], public body: ExprC) {}
+}
+type ExprC = NumC | IdC | AppC | LamC; //| IfC
 
 // Environment
 interface HashTable<T> {
@@ -64,12 +56,12 @@ type Value = NumV | StrV | BoolV | CloV | PrimV;
 function init_mt_env(): Map<string, Value> {
    var env = new Map<string, Value>();
    env.set('null', new StrV('null'));
-   env.set('+', new PrimV(my_add));
+   env.set('+', new PrimV(plus));
    return env;
 }
 
-function my_add(left: Value, right: Value) {
-   return (<NumV>left).n + (<NumV>right).n;
+function plus(left: Value, right: Value): Value {
+   return new NumV((<NumV>left).n + (<NumV>right).n);
 }
 
 // extends the environment
@@ -92,6 +84,14 @@ function interp(env: Map<string, Value>): (expr: ExprC) => Value {
    const match: Pattern<Value> = {
       NumC: ({ n }) => new NumV(n),
       IdC: ({ s }) => <Value>env.get(s),
+      AppC: ({ func, args }) => {
+         const interpWithEnv = interp(env);
+         const fd = interpWithEnv(func) as PrimV;
+         const l = interpWithEnv(args[0]);
+         const r = interpWithEnv(args[1]);
+         return fd.op(l, r);
+      },
+      LamC: ({ params, body }) => new CloV(params, body, env),
    };
 
    return expr => match[expr.type](expr as any);
@@ -99,5 +99,5 @@ function interp(env: Map<string, Value>): (expr: ExprC) => Value {
 
 const topInterp = interp(init_mt_env());
 
-export { NumC, IdC, Value, NumV, StrV };
+export { NumC, IdC, AppC, Value, NumV, StrV };
 export default topInterp;
