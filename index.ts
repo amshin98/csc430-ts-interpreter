@@ -51,20 +51,21 @@ class CloV {
 }
 class PrimV {
     type = "PrimV" as const
-    constructor(public op: Value, public left: Value, public right: Value) {}
+    constructor(public op: any) {}
 }
 type Value = NumV | StrV | BoolV | CloV | PrimV
 
+// Environment
 function init_mt_env() {
-  var env: HashTable<number> = {}
-  env["false"] = 1;
-  env["+"] = 1;
-  env["*"] = 1;
-  env["-"] = 1;
-  env["/"] = 1;
-  env["<="] = 1;
-  env["equal?"] = 1;
+  var env = new Map();
+  env.set("+", new PrimV(my_add));
+  return env;
 }
+
+function my_add(left : Value, right : Value) {
+  return (<NumV> left).n + (<NumV> right).n;
+}
+
 
 type ExprC = NumC | IdC//| StrC | BoolC | IdC | IfC | AppC | LamC
 type ExprCType = ExprC["type"]
