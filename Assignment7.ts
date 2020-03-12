@@ -28,3 +28,19 @@ class LamC {
 }
   
 type ExprC = NumC | StrC | BoolC | IdC | IfC | AppC | LamC
+
+// Environment
+interface HashTable<T> {
+    [key : string] : T;
+}
+
+function init_mt_env() {
+    var env: HashTable<number> = {}
+    env["false"] = 1;
+    env["+"] = 1;
+    env["*"] = 1;
+    env["-"] = 1;
+    env["/"] = 1;
+    env["<="] = 1;
+    env["equal?"] = 1;
+}
