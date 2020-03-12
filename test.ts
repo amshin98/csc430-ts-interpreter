@@ -52,4 +52,17 @@ describe('complex exprC tests', function() {
       );
       expect(result).toEqual(new NumV(5));
    });
+   it('AppC: CloV to verify env extension', function() {
+      // ((lam (x) (lam () x)) 10)
+      const result: Value = topInterp(
+         new AppC(
+            new LamC(
+               ['x'],
+               new AppC(new LamC([], new IdC('x')), [])
+            ),
+            [new NumC(10)],
+         ),
+      );
+      expect(result).toEqual(new NumV(10));
+   });
 });
