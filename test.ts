@@ -55,14 +55,29 @@ describe('complex exprC tests', function() {
    it('AppC: CloV to verify env extension', function() {
       // ((lam (x) (lam () x)) 10)
       const result: Value = topInterp(
+         new AppC(new LamC(['x'], new AppC(new LamC([], new IdC('x')), [])), [
+            new NumC(10),
+         ]),
+      );
+      expect(result).toEqual(new NumV(10));
+   });
+   it('AppC: CloV w/ PrimV', function() {
+      // ((lam (x) (lam () (+ x 1))) 10)
+      const result: Value = topInterp(
          new AppC(
             new LamC(
                ['x'],
-               new AppC(new LamC([], new IdC('x')), [])
+               new AppC(
+                  new LamC(
+                     [],
+                     new AppC(new IdC('+'), [new IdC('x'), new NumC(1)]),
+                  ),
+                  [],
+               ),
             ),
             [new NumC(10)],
          ),
       );
-      expect(result).toEqual(new NumV(10));
+      expect(result).toEqual(new NumV(11));
    });
 });
