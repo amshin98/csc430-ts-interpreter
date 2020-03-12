@@ -9,8 +9,8 @@
 (struct TernC ([test : ExprC] [then : ExprC] [else : ExprC]))
 
 ;; Types of binop
-(define-type arith-op (U '+ '- '* '/ '% '++ '--))
-(define-type unary-op (U '++ '-- '!))
+(define-type arith-op (U '+ '- '* '/ '% '++ '-- '& '\| '^ '<< '>> '>>>))
+(define-type unary-op (U '++ '-- '! '~))
 
 ;; Value
 (define-type Value (U NumV BoolV StringV))
@@ -27,6 +27,8 @@
 (: decr (Real Real))
 (define (decr x)
   (- x 1))
+
+;; 
 
 ;; Binop table
 (define op-table
