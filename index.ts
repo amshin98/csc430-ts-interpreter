@@ -27,6 +27,22 @@ class IdC {
 //     constructor(public params: symbol[], public body: ExprC) {}
 // }
 
+// Environment
+interface HashTable<T> {
+  [key : string] : T;
+}
+
+function init_mt_env() {
+  var env: HashTable<number> = {}
+  env["false"] = 1;
+  env["+"] = 1;
+  env["*"] = 1;
+  env["-"] = 1;
+  env["/"] = 1;
+  env["<="] = 1;
+  env["equal?"] = 1;
+}
+
 type ExprC = NumC | IdC//| StrC | BoolC | IdC | IfC | AppC | LamC
 type ExprCType = ExprC["type"]
 
