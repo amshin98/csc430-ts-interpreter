@@ -86,10 +86,22 @@ function interp(env: Map<string, Value>): (expr: ExprC) => Value {
       IdC: ({ s }) => <Value>env.get(s),
       AppC: ({ func, args }) => {
          const interpWithEnv = interp(env);
-         const fd = interpWithEnv(func) as PrimV;
-         const l = interpWithEnv(args[0]);
-         const r = interpWithEnv(args[1]);
-         return fd.op(l, r);
+         const funcDefinition: Value = interpWithEnv(func);
+         if (funcDefinition instanceof CloV) {
+            const newEnv = new Map();
+            funcDefinition.params.forEach((param, index) =>
+               newEnv.set(param, interpWithEnv(args[index])),
+            );
+            return interp(extend_env(newEnv, funcDefinition.env))(
+               funcDefinition.body,
+            );
+         } else if (funcDefinition instanceof PrimV) {
+            const leftOp = interpWithEnv(args[0]);
+            const rightOp = interpWithEnv(args[1]);
+            return funcDefinition.op(leftOp, rightOp);
+         } else {
+            throw new Error('DUNQ: AppC was not a CloV or a PrimV');
+         }
       },
       LamC: ({ params, body }) => new CloV(params, body, env),
    };
@@ -99,5 +111,5 @@ function interp(env: Map<string, Value>): (expr: ExprC) => Value {
 
 const topInterp = interp(init_mt_env());
 
-export { NumC, IdC, AppC, Value, NumV, StrV };
+export { NumC, IdC, AppC, LamC, Value, NumV, StrV };
 export default topInterp;
